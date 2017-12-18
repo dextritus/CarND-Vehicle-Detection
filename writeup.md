@@ -15,6 +15,9 @@ The goals / steps of this project are the following:
 
 ---
 
+### Files
+The main project file is `main.py`, and the methods used are in `util_functions.py`.
+
 ### Feature extraction
 In order to train a classifier to detect car vs non-car images, 8792 examples of 64x64 car images and 8968 examples of 64x64 non-car images were used for training. 
 
@@ -42,7 +45,7 @@ Using a 80%-20% data split for training-test data, the classifier achieved consi
 
 In the `find_cars` method, a sliding window approach was used to analyze different regions of the input image in order to check if a car is present or not. Windows of scales between 0.8 and 3 (with 10 levels in-between) were used. A window of scale of 1 is given by a 8x8 pixels cell. For scales of size smaller than 1.5, the region of interest is restricted to the further end of the road, where cars are likely to appear smaller due to the distance. For all windows, the lower half of the image is used.
 
-In the X direction, the window step is one cell, whereas for the Y direction the window step is 2 cells, in order to speed up the processing time. 
+In the X direction, the window step is one cell, whereas for the Y direction the window step is 2 cells, in order to speed up the processing time. Also, cars are moving more in the X direction than Y in the video file. 
 
 The region inside each window is resized to 64x64 pixels, the features are extracted and scaled, and the result is used to make a prediction. If the prediction is 1 (car is present), the region inside the window is added to a heat map. Once windows of all the required scales are used, the heatmap values above a certain value are kept (threshold value is 7 now). This method reduces the number of false positives in the predictions. In order to identify the number of cars, the scikit `label` method identifies the number of connected components in the thresholded heatmap. Finally, for each connected component, the largest rectangle covering the region is used as the bounding box around a car in the image. 
 
