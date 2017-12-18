@@ -11,7 +11,7 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [image1]: ./output_images/ycrcbhog.png
-[image2]: ./output_images/windo.png
+[image2]: ./output_images/window.png
 
 ---
 
