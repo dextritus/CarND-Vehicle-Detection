@@ -43,7 +43,7 @@ Using a 80%-20% data split for training-test data, the classifier achieved consi
 
 ### Sliding windows for prediction
 
-In the `find_cars` method, a sliding window approach was used to analyze different regions of the input image in order to check if a car is present or not. Windows of scales between 0.8 and 3 (with 10 levels in-between) were used. A window of scale of 1 is given by a 8x8 pixels cell. For scales of size smaller than 1.5, the region of interest is restricted to the further end of the road, where cars are likely to appear smaller due to the distance. For all windows, the lower half of the image is used.
+In the `find_cars` method, a sliding window approach was used to analyze different regions of the input image in order to check if a car is present or not. Windows of scales between 0.8 and 3 (with 10 levels in-between) were used. A window of scale of 1 is given by a 8x8 pixels cell. For scales of size smaller than 1.2, the region of interest is restricted to the further end of the road, where cars are likely to appear smaller due to the distance. For all windows, the lower half of the image is used.
 
 In the X direction, the window step is one cell, whereas for the Y direction the window step is 2 cells, in order to speed up the processing time. Also, cars are moving more in the X direction than Y in the video file. 
 
@@ -51,7 +51,7 @@ The region inside each window is resized to 64x64 pixels, the features are extra
 
 Below, an example of different windows that have a positive prediction for the car (top left), the resulting heatmap (top right), the thresholded heatmap (bottom left), and the final bounding box for the car (lower right) are shown.
 
-![alt text][image1]
+![alt text][image2]
 
 ### Output video
 
@@ -61,7 +61,9 @@ The final processed video is found in the `project_video_output.mp4` file.
 
 The threshold value for the heatmap proved to be very important parameter to tune. A higher value will result in fewer false positives, but with a much tighter bounding box. 
 
-A possible improvement to reduce the false positives even further is to look at a window of video frames, and check if a detected car appears again in the next frames, within a certain region around the detected car in the current frame. 
+A possible improvement to reduce the false positives even further is to look at a window of video frames, and check if a detected car appears again in the next frames, within a certain region around the detected car in the current frame. This would also result in a smoother bounding box, through averaging between frames. However, this technique would result in a delay in detecting a car, which might be a problem in case of emergencies.
 
-In order to speed up the processing time, I would first start with a large scale window, and if a car is present, refine the search with smaller and smaller windows, in order to make sure the detection is not a false positive, and also to identify the bounding box for the car. 
+ There is a small positive on the ground for a split second, at around second 40, due to some shadows that bring sturcture to the road. This could have been eliminated using the techique mentioned in this paragraph.
+
+In order to speed up the processing time, I would first start with a large scale window, and if a car is detected, refine the search with smaller and smaller windows, in order to make sure the detection is not a false positive, and also to identify the bounding box for the car. 
 

@@ -126,7 +126,7 @@ scale = 2
 def pipeline(img):
 	# test_img = mpimg.imread('./test_images/test5.jpg')
 	heat = np.zeros((720,1280)).astype(np.float)
-	s_range = np.linspace(1, 2.6, 10)
+	s_range = np.linspace(0.8, 3, 10)
 	out_img = np.copy(img)
 	for scale in s_range:
 		out_img, boxes = find_cars(img, out_img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
@@ -147,7 +147,7 @@ def pipeline(img):
 ########################################
 
 fname = "project_video"
-output = fname + "_output_2.mp4"
+output = fname + "_output_final.mp4"
 input_file = VideoFileClip(fname + ".mp4")
 # cut_file = input_file.subclip(6, 6.4)
 processed_file = input_file.fl_image(pipeline)

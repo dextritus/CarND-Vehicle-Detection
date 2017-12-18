@@ -144,7 +144,7 @@ def find_cars(img, draw_img, ystart, ystop, scale, svc, X_scaler, orient, pix_pe
     #define the search area depending on the scaling of the window    
     xstart = 250
 
-    if scale < 1:
+    if scale < 1.2:
         ystart = 400
         yend = 500
         xstart = 400
