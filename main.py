@@ -34,54 +34,58 @@ hist_bins = 16    # Number of histogram bins
 spatial_feat = True # Spatial features on or off
 hist_feat = True # Histogram features on or off
 hog_feat = True # HOG features on or off
-y_start_stop = [300, None] # Min and max in y to search in slide_window()
+# y_start_stop = [300, None] # Min and max in y to search in slide_window()
 
-# car_features = extract_features(car_images, color_space=color_space, 
-# 						spatial_size=spatial_size, hist_bins=hist_bins, 
-# 						orient=orient, pix_per_cell=pix_per_cell, 
-# 						cell_per_block=cell_per_block, 
-# 						hog_channel=hog_channel, spatial_feat=spatial_feat, 
-# 						hist_feat=hist_feat, hog_feat=hog_feat)
+################################################
+# feature extraction
+################################################
 
-# notcar_features = extract_features(noncar_images, color_space=color_space, 
-# 						spatial_size=spatial_size, hist_bins=hist_bins, 
-# 						orient=orient, pix_per_cell=pix_per_cell, 
-# 						cell_per_block=cell_per_block, 
-# 						hog_channel=hog_channel, spatial_feat=spatial_feat, 
-# 						hist_feat=hist_feat, hog_feat=hog_feat)
+car_features = extract_features(car_images, color_space=color_space, 
+						spatial_size=spatial_size, hist_bins=hist_bins, 
+						orient=orient, pix_per_cell=pix_per_cell, 
+						cell_per_block=cell_per_block, 
+						hog_channel=hog_channel, spatial_feat=spatial_feat, 
+						hist_feat=hist_feat, hog_feat=hog_feat)
 
-# # # #stack all features for scaling
-# X = np.vstack((car_features, notcar_features)).astype(np.float64)
-# # # # apply the scaler
-# X_scaler = StandardScaler().fit(X) # could also use fit_transform
-# X_scaled = X_scaler.transform(X)
+notcar_features = extract_features(noncar_images, color_space=color_space, 
+						spatial_size=spatial_size, hist_bins=hist_bins, 
+						orient=orient, pix_per_cell=pix_per_cell, 
+						cell_per_block=cell_per_block, 
+						hog_channel=hog_channel, spatial_feat=spatial_feat, 
+						hist_feat=hist_feat, hog_feat=hog_feat)
 
-# y = np.hstack((np.ones(len(car_images)), np.zeros(len(noncar_images))))
+# # #stack all features for scaling
+X = np.vstack((car_features, notcar_features)).astype(np.float64)
+# # # apply the scaler
+X_scaler = StandardScaler().fit(X) # could also use fit_transform
+X_scaled = X_scaler.transform(X)
 
-# # # split into training and test vectors
-# rand_state = np.random.randint(0, 100)
-# X_train, X_test, y_train, y_test = train_test_split(
-# 	X_scaled, y, test_size=0.2, random_state=rand_state)
+y = np.hstack((np.ones(len(car_images)), np.zeros(len(noncar_images))))
 
-# # # train the classifier with the training data
-# svc = LinearSVC()
-# t1 = time.time()
-# svc.fit(X_train, y_train)
-# t2 = time.time()
+# # split into training and test vectors
+rand_state = np.random.randint(0, 100)
+X_train, X_test, y_train, y_test = train_test_split(
+	X_scaled, y, test_size=0.2, random_state=rand_state)
 
-# print("It takes ", round((t2-t1),2), 'seconds to train the SVC classifier')
-# print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+# # train the classifier with the training data
+svc = LinearSVC()
+t1 = time.time()
+svc.fit(X_train, y_train)
+t2 = time.time()
 
-# ##############################
-# # save to pickled data
-# ##############################
-# pickle_data = {}
-# pickle_file = open('pickle_file', 'wb')
-# pickle_data['X_scaled'] = X_scaled
-# pickle_data['X_scaler'] = X_scaler
-# pickle_data['clsf'] = svc
-# pickle.dump(pickle_data, pickle_file)
-# pickle_file.close()
+print("It takes ", round((t2-t1),2), 'seconds to train the SVC classifier')
+print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+
+##############################
+# save to pickled data
+##############################
+pickle_data = {}
+pickle_file = open('pickle_file', 'wb')
+pickle_data['X_scaled'] = X_scaled
+pickle_data['X_scaler'] = X_scaler
+pickle_data['clsf'] = svc
+pickle.dump(pickle_data, pickle_file)
+pickle_file.close()
 
 ##############################
 # load pickled data
@@ -94,25 +98,6 @@ X_scaler = pickle_data['X_scaler']
 svc = pickle_data['clsf']
 pickle_file.close()
 
-# processed_file = cut_file.fl_image(pipeline)
-# cut_file.write_videofile(output, audio = False)
-
-# windows = slide_window(test_img, x_start_stop=[200, 1400], y_start_stop=y_start_stop, 
-#                     xy_window=(96, 96), xy_overlap=(0.0, 0.0))
-
-# print(windows)
-# hot_windows = search_windows(test_img, windows, svc, X_scaler, color_space=color_space, 
-#                         spatial_size=spatial_size, hist_bins=hist_bins, 
-#                         orient=orient, pix_per_cell=pix_per_cell, 
-#                         cell_per_block=cell_per_block, 
-#                         hog_channel=hog_channel, spatial_feat=spatial_feat, 
-#                         hist_feat=hist_feat, hog_feat=hog_feat)
-
-# print(len(hot_windows))
-# window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)                    
-
-# plt.figure()
-# plt.imshow(window_img, origin = 'upper')
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 
@@ -147,14 +132,11 @@ def pipeline(img):
 ########################################
 
 fname = "project_video"
-output = fname + "_output_final.mp4"
+output = fname + "_output.mp4"
 input_file = VideoFileClip(fname + ".mp4")
-# cut_file = input_file.subclip(6, 6.4)
 processed_file = input_file.fl_image(pipeline)
 processed_file.write_videofile(output, audio = False)
 
-# print(len(car_images))
-# print(len(noncar_images))
 ##########################################
 # save images for writeup
 ###########################################
@@ -190,7 +172,7 @@ processed_file.write_videofile(output, audio = False)
 
 # test_img = mpimg.imread('./test_images/test5.jpg')
 # heat = np.zeros((720,1280)).astype(np.float)
-# s_range = np.linspace(1, 3, 10)
+# s_range = np.linspace(0.8, 3, 10)
 # out_img = np.copy(test_img)
 # for scale in s_range:
 # 	out_img, boxes = find_cars(test_img, out_img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
