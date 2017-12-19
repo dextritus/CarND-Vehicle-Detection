@@ -57,7 +57,7 @@ Below, an example of different windows that have a positive prediction for the c
 
 ### Output video
 
-The final processed video is found in the `project_video_output.mp4` file.
+The final processed video is found in the `project_video_output_revised.mp4` file. The old video is `project_video_output.mp4`
 
 ### Discussion
 
