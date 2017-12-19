@@ -43,11 +43,13 @@ Using a 80%-20% data split for training-test data, the classifier achieved consi
 
 ### Sliding windows for prediction
 
-In the `find_cars` method, a sliding window approach was used to analyze different regions of the input image in order to check if a car is present or not. Windows of scales between 0.8 and 3 (with 10 levels in-between) were used. A window of scale of 1 is given by a 8x8 pixels cell. For scales of size smaller than 1.2, the region of interest is restricted to the further end of the road, where cars are likely to appear smaller due to the distance. For all windows, the lower half of the image is used.
+In the `find_cars` method, a sliding window approach was used to analyze different regions of the input image in order to check if a car is present or not. Windows of scales between 0.8 and 3 (with 5 levels in-between) were used. A window of scale of 1 is given by a 8x8 pixels cell. For scales of size smaller than 1.2, the region of interest is restricted to the further end of the road (limited y), where cars are likely to appear smaller due to the distance. For all windows, the lower half of the image is used.
 
-In the X direction, the window step is one cell, whereas for the Y direction the window step is 2 cells, in order to speed up the processing time. Also, cars are moving more in the X direction than Y in the video file. 
+For both the X and Y directions, the window step is one cell. 
 
-The region inside each window is resized to 64x64 pixels, the features are extracted and scaled, and the result is used to make a prediction. If the prediction is 1 (car is present), the region inside the window is added to a heat map. Once windows of all the required scales are used, the heatmap values above a certain value are kept (threshold value is 7 now). This method reduces the number of false positives in the predictions. In order to identify the number of cars, the scikit `label` method identifies the number of connected components in the thresholded heatmap. Finally, for each connected component, the largest rectangle covering the region is used as the bounding box around a car in the image. 
+The region inside each window is resized to 64x64 pixels, the features are extracted and scaled, and the result is used to make a prediction. If the prediction is 1 (car is present), the region inside the window is added to a heat map. Once windows of all the required scales are used, the heatmap is added to a heatmap history window `hist_wdw` that holds the heatmaps from the last 8 frames. At end, the average value of all 8 heatmaps is used, to provide a measure of the most probable car detection locations. A threshold value of 2.75 is then used to filter the resulting heatmap.  In order to identify the number of cars, the scikit `label` method identifies the number of connected components in the thresholded heatmap. Finally, for each connected component, the largest rectangle covering the region is used as the bounding box around a car in the image. 
+
+An additional check is made in `draw_labeled_bboxes` that checks if the number of pixels in each label is greater than a threshold value (currently set to 100 pixels). This prevents the bounding box to be drawn, if the inside of the box contains a snake-like pixel shape that extends in one direction only, which is very unlikely to represent a car. 
 
 Below, an example of different windows that have a positive prediction for the car (top left), the resulting heatmap (top right), the thresholded heatmap (bottom left), and the final bounding box for the car (lower right) are shown.
 
@@ -59,11 +61,8 @@ The final processed video is found in the `project_video_output.mp4` file.
 
 ### Discussion
 
-The threshold value for the heatmap proved to be very important parameter to tune. A higher value will result in fewer false positives, but with a much tighter bounding box. 
-
-A possible improvement to reduce the false positives even further is to look at a window of video frames, and check if a detected car appears again in the next frames, within a certain region around the detected car in the current frame. This would also result in a smoother bounding box, through averaging between frames. However, this technique would result in a delay in detecting a car, which might be a problem in case of emergencies.
-
- There is a small positive on the ground for a split second, at around second 40, due to some shadows that bring sturcture to the road. This could have been eliminated using the techique mentioned in this paragraph.
+The threshold value for the heatmap history proved to be very important parameter to tune. A higher value will result in fewer false positives, but with a much tighter bounding box.
 
 In order to speed up the processing time, I would first start with a large scale window, and if a car is detected, refine the search with smaller and smaller windows, in order to make sure the detection is not a false positive, and also to identify the bounding box for the car. 
 
+Cropping the training images to show only part of the cars could be used to augment the data set and generalize better. In order to make sure that overfitting doesn't occur, the C parameter of the SVC could be chosen to be fairly small. 

@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from sklearn.metrics import accuracy_score
 from scipy.ndimage.measurements import label
+from collections import deque
 
 #process the movie
 from moviepy.editor import VideoFileClip
@@ -40,52 +41,52 @@ hog_feat = True # HOG features on or off
 # feature extraction
 ################################################
 
-car_features = extract_features(car_images, color_space=color_space, 
-						spatial_size=spatial_size, hist_bins=hist_bins, 
-						orient=orient, pix_per_cell=pix_per_cell, 
-						cell_per_block=cell_per_block, 
-						hog_channel=hog_channel, spatial_feat=spatial_feat, 
-						hist_feat=hist_feat, hog_feat=hog_feat)
+# car_features = extract_features(car_images, color_space=color_space, 
+# 						spatial_size=spatial_size, hist_bins=hist_bins, 
+# 						orient=orient, pix_per_cell=pix_per_cell, 
+# 						cell_per_block=cell_per_block, 
+# 						hog_channel=hog_channel, spatial_feat=spatial_feat, 
+# 						hist_feat=hist_feat, hog_feat=hog_feat)
 
-notcar_features = extract_features(noncar_images, color_space=color_space, 
-						spatial_size=spatial_size, hist_bins=hist_bins, 
-						orient=orient, pix_per_cell=pix_per_cell, 
-						cell_per_block=cell_per_block, 
-						hog_channel=hog_channel, spatial_feat=spatial_feat, 
-						hist_feat=hist_feat, hog_feat=hog_feat)
+# notcar_features = extract_features(noncar_images, color_space=color_space, 
+# 						spatial_size=spatial_size, hist_bins=hist_bins, 
+# 						orient=orient, pix_per_cell=pix_per_cell, 
+# 						cell_per_block=cell_per_block, 
+# 						hog_channel=hog_channel, spatial_feat=spatial_feat, 
+# 						hist_feat=hist_feat, hog_feat=hog_feat)
 
-# # #stack all features for scaling
-X = np.vstack((car_features, notcar_features)).astype(np.float64)
-# # # apply the scaler
-X_scaler = StandardScaler().fit(X) # could also use fit_transform
-X_scaled = X_scaler.transform(X)
+# # # #stack all features for scaling
+# X = np.vstack((car_features, notcar_features)).astype(np.float64)
+# # # # apply the scaler
+# X_scaler = StandardScaler().fit(X) # could also use fit_transform
+# X_scaled = X_scaler.transform(X)
 
-y = np.hstack((np.ones(len(car_images)), np.zeros(len(noncar_images))))
+# y = np.hstack((np.ones(len(car_images)), np.zeros(len(noncar_images))))
 
-# # split into training and test vectors
-rand_state = np.random.randint(0, 100)
-X_train, X_test, y_train, y_test = train_test_split(
-	X_scaled, y, test_size=0.2, random_state=rand_state)
+# # # split into training and test vectors
+# rand_state = np.random.randint(0, 100)
+# X_train, X_test, y_train, y_test = train_test_split(
+# 	X_scaled, y, test_size=0.2, random_state=rand_state)
 
-# # train the classifier with the training data
-svc = LinearSVC()
-t1 = time.time()
-svc.fit(X_train, y_train)
-t2 = time.time()
+# # # train the classifier with the training data
+# svc = LinearSVC()
+# t1 = time.time()
+# svc.fit(X_train, y_train)
+# t2 = time.time()
 
-print("It takes ", round((t2-t1),2), 'seconds to train the SVC classifier')
-print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+# print("It takes ", round((t2-t1),2), 'seconds to train the SVC classifier')
+# print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 
-##############################
-# save to pickled data
-##############################
-pickle_data = {}
-pickle_file = open('pickle_file', 'wb')
-pickle_data['X_scaled'] = X_scaled
-pickle_data['X_scaler'] = X_scaler
-pickle_data['clsf'] = svc
-pickle.dump(pickle_data, pickle_file)
-pickle_file.close()
+# ##############################
+# # save to pickled data
+# ##############################
+# pickle_data = {}
+# pickle_file = open('pickle_file', 'wb')
+# pickle_data['X_scaled'] = X_scaled
+# pickle_data['X_scaler'] = X_scaler
+# pickle_data['clsf'] = svc
+# pickle.dump(pickle_data, pickle_file)
+# pickle_file.close()
 
 ##############################
 # load pickled data
@@ -101,23 +102,35 @@ pickle_file.close()
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 
-ystart = 400
+ystart = 390
 ystop = 656
 scale = 2
 
 ########################################
 # pipeline for each image
 ########################################
+hist_wdw = deque(maxlen = 8)
+
+def hist_wdw_avg(hist_wdw):
+	hist_sum = np.zeros_like(hist_wdw[0])
+	for i in range(0, len(hist_wdw)):
+		hist_sum = np.add(hist_sum, hist_wdw[i])
+
+	return hist_sum/len(hist_wdw)
+
 def pipeline(img):
 	# test_img = mpimg.imread('./test_images/test5.jpg')
 	heat = np.zeros((720,1280)).astype(np.float)
-	s_range = np.linspace(0.8, 3, 10)
+	s_range = np.linspace(0.8, 3, 5)
 	out_img = np.copy(img)
 	for scale in s_range:
 		out_img, boxes = find_cars(img, out_img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 		heat = add_heat(heat, boxes)
 
-	heat = apply_threshold(heat,7)
+	hist_wdw.append(heat)
+	hist_avg = hist_wdw_avg(hist_wdw)
+	# print("hist_avg ", np.max(hist_avg))
+	heat = apply_threshold(hist_avg, 2.75)
 	heatmap = np.clip(heat, 0, 255)
 
 	labels = label(heatmap)
@@ -132,8 +145,9 @@ def pipeline(img):
 ########################################
 
 fname = "project_video"
-output = fname + "_output.mp4"
+output = fname + "_output_final_revised.mp4"
 input_file = VideoFileClip(fname + ".mp4")
+# cut_file = input_file.subclip(41, 43)
 processed_file = input_file.fl_image(pipeline)
 processed_file.write_videofile(output, audio = False)
 
@@ -172,14 +186,14 @@ processed_file.write_videofile(output, audio = False)
 
 # test_img = mpimg.imread('./test_images/test5.jpg')
 # heat = np.zeros((720,1280)).astype(np.float)
-# s_range = np.linspace(0.8, 3, 10)
+# s_range = np.linspace(0.8, 3, 5)
 # out_img = np.copy(test_img)
 # for scale in s_range:
 # 	out_img, boxes = find_cars(test_img, out_img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 # 	heat = add_heat(heat, boxes)
 
 # heat_orig = np.copy(heat)
-# heat = apply_threshold(heat,7)
+# heat = apply_threshold(heat,3)
 # heatmap = np.clip(heat, 0, 255)
 
 # labels = label(heatmap)

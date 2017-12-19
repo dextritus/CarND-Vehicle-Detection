@@ -142,14 +142,14 @@ def find_cars(img, draw_img, ystart, ystop, scale, svc, X_scaler, orient, pix_pe
     img = img.astype(np.float32)/255
 
     #define the search area depending on the scaling of the window    
-    xstart = 250
+    xstart = 380
 
     if scale < 1.2:
-        ystart = 400
+        ystart = 390
         yend = 500
-        xstart = 400
-        xend = 900
-        img_tosearch = img[ystart:ystop,xstart:xend]
+        # xstart = 400
+        # xend = 1050
+        img_tosearch = img[ystart:ystop,xstart:]
 
     else:
         img_tosearch = img[ystart:ystop,xstart:]
@@ -171,7 +171,7 @@ def find_cars(img, draw_img, ystart, ystop, scale, svc, X_scaler, orient, pix_pe
     window = 64
     nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
     cells_per_step_x = 1  # Instead of overlap, define how many cells to step
-    cells_per_step_y = 2
+    cells_per_step_y = 1
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step_x + 1
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step_y + 1
     
@@ -241,6 +241,7 @@ def draw_labeled_bboxes(img, labels):
         # Define a bounding box based on min/max x and y
         bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
         # Draw the box on the image
-        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        if np.count_nonzero(labels[0][labels[0]==car_number]) > 100:
+            cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
     # Return the image
     return img
