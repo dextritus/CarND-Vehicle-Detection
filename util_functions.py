@@ -144,7 +144,7 @@ def find_cars(img, draw_img, ystart, ystop, scale, svc, X_scaler, orient, pix_pe
     #define the search area depending on the scaling of the window    
     xstart = 380
 
-    if scale < 1.2:
+    if scale < 1.1:
         ystart = 390
         yend = 500
         # xstart = 400
@@ -210,7 +210,7 @@ def find_cars(img, draw_img, ystart, ystop, scale, svc, X_scaler, orient, pix_pe
                 ytop_draw = np.int(ytop*scale)
                 win_draw = np.int(window*scale)
                 box_list.append(((xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart)))
-                # cv2.rectangle(draw_img,(xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart),(0,0,255),6) 
+                cv2.rectangle(draw_img,(xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart),(0,0,255),6) 
                 
     return draw_img, box_list
 

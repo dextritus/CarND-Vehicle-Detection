@@ -144,12 +144,12 @@ def pipeline(img):
 # video files
 ########################################
 
-fname = "project_video"
-output = fname + "_output_final_revised.mp4"
-input_file = VideoFileClip(fname + ".mp4")
-# cut_file = input_file.subclip(41, 43)
-processed_file = input_file.fl_image(pipeline)
-processed_file.write_videofile(output, audio = False)
+# fname = "project_video"
+# output = fname + "_output_final_revised.mp4"
+# input_file = VideoFileClip(fname + ".mp4")
+# # cut_file = input_file.subclip(41, 43)
+# processed_file = input_file.fl_image(pipeline)
+# processed_file.write_videofile(output, audio = False)
 
 ##########################################
 # save images for writeup
@@ -193,7 +193,7 @@ processed_file.write_videofile(output, audio = False)
 # 	heat = add_heat(heat, boxes)
 
 # heat_orig = np.copy(heat)
-# heat = apply_threshold(heat,3)
+# heat = apply_threshold(heat,5)
 # heatmap = np.clip(heat, 0, 255)
 
 # labels = label(heatmap)
